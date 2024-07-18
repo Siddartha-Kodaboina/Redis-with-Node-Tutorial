@@ -19,7 +19,7 @@ For macOS:
 For Ubuntu:
 ```sudo apt-get install redis-server```
 For Windows:
-Download and install Redis from the official ![Redis website](https://redis.io/docs/latest/operate/oss_and_stack/install/install-redis/install-redis-on-windows/).
+Download and install Redis from the official [Redis website](https://redis.io/docs/latest/operate/oss_and_stack/install/install-redis/install-redis-on-windows/).
 
 **2. Starting the Redis Server**
 Once Redis is installed, you can start the server with the following command:
@@ -62,7 +62,6 @@ To test and verify the performance optimization:
 
 ## My Performance Measurement Results
 
-```
 <p><span style="color: red;">Without Redis:</span> GET http://localhost:4000/photos<br>
 <span style="color: red;">200</span> <span style="color: red;">218 ms</span></p>
 
@@ -80,8 +79,6 @@ To test and verify the performance optimization:
 <span style="color: green;">200</span> <span style="color: green;">6 ms</span><br>
 <span style="color: green;">200</span> <span style="color: green;">4 ms</span><br>
 <span style="color: green;">200</span> <span style="color: green;">4 ms</span></p>
-
-```
 
 
 ## Conclusion
