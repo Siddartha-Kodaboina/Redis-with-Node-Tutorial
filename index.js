@@ -14,55 +14,57 @@ const redisClient = createClient({
 redisClient.on('error', (err) => console.log('Redis Client Error', err));
 redisClient.connect();
 
+
+
+
 app.get('/photos', async (req, res) => {
     try {
-        const cachedPhotos = await redisClient.get('photos');
-        if (cachedPhotos) {
-            console.log("Returning from cached photos");
-            return res.json(JSON.parse(cachedPhotos));
-        }
-    } catch (error) {
-        console.error('Redis error:', error);
-    }
-    const albumId = req.query.albumId;
-    console.log("Is it comming this far..?")
-    try {
-        const response = await axios.get("https://jsonplaceholder.typicode.com/photos", { params: { albumId } });
-        await redisClient.set("photos", JSON.stringify(response.data), {
-            EX: DEFAULT_EXPIRATION
+        const data = await getOrSetCache('photos', async () => {
+            const response = await axios.get("https://jsonplaceholder.typicode.com/photos");
+            return response.data;
         });
-        console.log("Returning frm DB photos")
-        res.json(response.data);
+        res.json(data);
     } catch (error) {
         console.error('Error fetching photos:', error);
         res.status(500).send('Failed to fetch photos');
     }
-})
+});
 
 app.get('/photos/:id', async (req, res) => {
     const photoId = req.params.id;
-
     try {
-        const cachedPhoto = await redisClient.get(`photos:${photoId}`);
-        if (cachedPhoto) {
-            console.log("Returning from cached photos");
-            return res.json(JSON.parse(cachedPhoto));
-        }
-    } catch (error) {
-        console.error('Redis error:', error);
-    }
-
-    try {
-        const response = await axios.get(`https://jsonplaceholder.typicode.com/photos/${photoId}`);
-        await redisClient.set(`photos:${photoId}`, JSON.stringify(response.data), {
-            EX: DEFAULT_EXPIRATION
+        const data = await getOrSetCache(`photos:${photoId}`, async () => {
+            const response = await axios.get(`https://jsonplaceholder.typicode.com/photos/${photoId}`);
+            return response.data;
         });
-        console.log("Returning from API");
-        res.json(response.data);
+        res.json(data);
     } catch (error) {
-        console.error('Error fetching photo ID:', error);
-        res.status(500).send('Failed to fetch photo');
+        console.error('Error fetching photos with id:', error);
+        res.status(500).send('Failed to fetch photos with id');
     }
 });
 
+const getOrSetCache = async (key, callback) => {
+    console.log('Getting inside the promise');
+    try {
+        let data = await redisClient.get(key);
+        if (data != null) {
+            console.log("Cache Hit");
+            return JSON.parse(data);
+        }
+        console.log("Cache Miss");
+        const freshData = await callback();
+        await redisClient.set(key, JSON.stringify(freshData), {
+            EX: DEFAULT_EXPIRATION
+        });
+        return freshData;
+    } catch (err) {
+        console.error('Redis error:', err);
+        throw err;
+    }
+
+}
+
+
 app.listen(4000, () => console.log('Server running on http://localhost:4000'));
+
